@@ -1,0 +1,24 @@
+{
+  "name": "leadvertex/plugin-core-logistic",
+  "description": "LeadVertex plugin logistic core",
+  "type": "library",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Timur Kasumov aka XAKEPEHOK",
+      "email": "support@leadvertex.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Leadvertex\\Plugin\\Core\\Logistic\\": "src/"
+    }
+  },
+  "require": {
+    "php": ">=7.4.0",
+    "ext-json": "*",
+    "leadvertex/plugin-core": "^0.1.1",
+    "leadvertex/plugin-component-logistic": "^0.3.3"
+  }
+}
