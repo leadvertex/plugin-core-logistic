@@ -19,7 +19,7 @@ final class WaybillContainer
 
     private static WaybillHandlerInterface $handler;
 
-    public static function __config(callable $form, WaybillHandlerInterface $handler): void
+    public static function config(callable $form, WaybillHandlerInterface $handler): void
     {
         self::$form = $form;
         self::$handler = $handler;

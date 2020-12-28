@@ -15,6 +15,8 @@ use Leadvertex\Plugin\Components\Info\PluginType;
 use Leadvertex\Plugin\Components\Settings\Settings;
 use Leadvertex\Plugin\Components\Translations\Translator;
 use Leadvertex\Plugin\Core\Actions\UploadAction;
+use Leadvertex\Plugin\Core\Logistic\Components\Waybill\WaybillContainer;
+use Leadvertex\Plugin\Core\Logistic\Components\Waybill\WaybillHandlerInterface;
 use Medoo\Medoo;
 use XAKEPEHOK\Path\Path;
 
@@ -35,12 +37,10 @@ UploadAction::config([
 
 # 4. Configure info about plugin
 Info::config(
-    new PluginType(PluginType::LOGISTIC),
+    new PluginType(PluginType::MACROS),
     fn() => Translator::get('info', 'Plugin name'),
     fn() => Translator::get('info', 'Plugin markdown description'),
-    [
-        "country" => "RU",
-    ],
+    [], //For example, it can be https://github.com/leadvertex/plugin-component-purpose for MACROS, or ["country" => "RU"] for LOGISTIC
     new Developer(
         'Your (company) name',
         'support.for.plugin@example.com',
@@ -71,4 +71,10 @@ BatchContainer::config(
 //    }
     },
     new BatchHandlerInterface()
+);
+
+# 8. Configure waybill form and handler
+WaybillContainer::config(
+    fn() => new WaybillForm(),
+    new WaybillHandlerInterface()
 );
