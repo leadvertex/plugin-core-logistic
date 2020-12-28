@@ -9,7 +9,7 @@ namespace Leadvertex\Plugin\Core\Logistic\Components\Waybill;
 
 
 use Leadvertex\Plugin\Components\Form\Form;
-use Leadvertex\Plugin\Core\Logistic\Components\Waybill\Exception\ShippingContainerException;
+use Leadvertex\Plugin\Core\Logistic\Components\Waybill\Exception\WaybillContainerException;
 
 final class WaybillContainer
 {
@@ -27,12 +27,12 @@ final class WaybillContainer
 
     /**
      * @return Form
-     * @throws ShippingContainerException
+     * @throws WaybillContainerException
      */
     public static function getForm(): Form
     {
         if (!isset(self::$form)) {
-            throw new ShippingContainerException('Waybill form was not configured', 100);
+            throw new WaybillContainerException('Waybill form was not configured', 100);
         }
 
         return (self::$form)();
@@ -40,12 +40,12 @@ final class WaybillContainer
 
     /**
      * @return WaybillHandlerInterface
-     * @throws ShippingContainerException
+     * @throws WaybillContainerException
      */
     public static function getHandler(): WaybillHandlerInterface
     {
         if (!isset(self::$handler)) {
-            throw new ShippingContainerException('Waybill handler was not configured', 200);
+            throw new WaybillContainerException('Waybill handler was not configured', 200);
         }
 
         return self::$handler;

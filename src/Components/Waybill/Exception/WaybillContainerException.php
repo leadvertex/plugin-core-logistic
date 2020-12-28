@@ -10,7 +10,7 @@ namespace Leadvertex\Plugin\Core\Logistic\Components\Waybill\Exception;
 
 use Exception;
 
-class ShippingContainerException extends Exception
+class WaybillContainerException extends Exception
 {
 
 }

@@ -23,7 +23,7 @@ class WaybillHandlerAction implements ActionInterface
      * @param Response $response
      * @param array $args
      * @return Response
-     * @throws Exception\ShippingContainerException
+     * @throws Exception\WaybillContainerException
      */
     public function __invoke(ServerRequest $request, Response $response, array $args): Response
     {
