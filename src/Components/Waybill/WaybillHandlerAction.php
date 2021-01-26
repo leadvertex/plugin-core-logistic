@@ -40,12 +40,12 @@ class WaybillHandlerAction implements ActionInterface
         /** @var Registration $registration */
         $registration = Registration::find();
 
-        $token = $registration->getOutputToken(function (Builder $builder) use ($waybillResponse) {
+        $token = $registration->getOutputToken(function (Builder $builder) use ($waybillResponse, $data) {
             $builder
                 ->expiresAt(time() + 60 * 60 * 6)
                 ->withClaim('waybill', $waybillResponse->logistic->getWaybill())
                 ->withClaim('status', $waybillResponse->logistic->getStatus())
-                ->withClaim('data', $waybillResponse->logistic->getData())
+                ->withClaim('data', $waybillResponse->logistic->getData() ?? $data->all())
             ;
         });
 
