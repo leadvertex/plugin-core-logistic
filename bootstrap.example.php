@@ -40,7 +40,7 @@ Info::config(
     new PluginType(PluginType::MACROS),
     fn() => Translator::get('info', 'Plugin name'),
     fn() => Translator::get('info', 'Plugin markdown description'),
-    [], //For example, it can be https://github.com/leadvertex/plugin-component-purpose for MACROS, or ["country" => "RU"] for LOGISTIC
+    ["country" => "RU"],
     new Developer(
         'Your (company) name',
         'support.for.plugin@example.com',
