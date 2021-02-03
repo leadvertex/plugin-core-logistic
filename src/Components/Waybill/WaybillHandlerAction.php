@@ -50,7 +50,7 @@ class WaybillHandlerAction implements ActionInterface
         });
 
         return $response->withJson([
-            'waybill' => (string) $token,
+            'logistic' => (string) $token,
             'address' => $waybillResponse->address,
         ]);
     }
