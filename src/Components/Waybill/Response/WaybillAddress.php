@@ -28,7 +28,7 @@ class WaybillAddress implements JsonSerializable
     {
         return [
             'field' => $this->field,
-            'address' => $this->address,
+            'value' => $this->address,
         ];
     }
 }
