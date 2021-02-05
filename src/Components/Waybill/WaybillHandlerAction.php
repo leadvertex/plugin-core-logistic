@@ -52,6 +52,8 @@ class WaybillHandlerAction implements ActionInterface
         return $response->withJson([
             'logistic' => (string) $token,
             'address' => $waybillResponse->address,
+            'waybill' => $waybillResponse->logistic->getWaybill(),
+            'status' => $waybillResponse->logistic->getStatus(),
         ]);
     }
 }
