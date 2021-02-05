@@ -11,6 +11,7 @@ namespace Leadvertex\Plugin\Core\Logistic\Components\Waybill;
 use Lcobucci\JWT\Builder;
 use Leadvertex\Plugin\Components\Access\Registration\Registration;
 use Leadvertex\Plugin\Components\Form\FormData;
+use Leadvertex\Plugin\Components\Logistic\LogisticStatus;
 use Leadvertex\Plugin\Core\Actions\ActionInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
@@ -53,7 +54,11 @@ class WaybillHandlerAction implements ActionInterface
             'logistic' => (string) $token,
             'address' => $waybillResponse->address,
             'waybill' => $waybillResponse->logistic->getWaybill(),
-            'status' => $waybillResponse->logistic->getStatus(),
+            'status' => [
+                'timestamp' => $waybillResponse->logistic->getStatus()->getTimestamp(),
+                'code' => LogisticStatus::code2strings()[$waybillResponse->logistic->getStatus()->getCode()],
+                'text' => $waybillResponse->logistic->getStatus()->getText(),
+            ],
         ]);
     }
 }
