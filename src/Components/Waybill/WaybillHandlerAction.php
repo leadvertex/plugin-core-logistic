@@ -8,7 +8,6 @@
 namespace Leadvertex\Plugin\Core\Logistic\Components\Waybill;
 
 
-use Lcobucci\JWT\Builder;
 use Leadvertex\Plugin\Components\Access\Registration\Registration;
 use Leadvertex\Plugin\Components\Form\FormData;
 use Leadvertex\Plugin\Components\Logistic\LogisticStatus;
@@ -41,17 +40,14 @@ class WaybillHandlerAction implements ActionInterface
         /** @var Registration $registration */
         $registration = Registration::find();
 
-        $token = $registration->getOutputToken(function (Builder $builder) use ($waybillResponse, $data) {
-            $builder
-                ->expiresAt(time() + 60 * 60 * 6)
-                ->withClaim('waybill', $waybillResponse->logistic->getWaybill())
-                ->withClaim('status', $waybillResponse->logistic->getStatus())
-                ->withClaim('data', $waybillResponse->logistic->getData() ?? $data->all())
-            ;
-        });
+        $logistic = $registration->getOutputToken([
+            'waybill' => $waybillResponse->logistic->getWaybill(),
+            'status' => $waybillResponse->logistic->getStatus(),
+            'data' => $waybillResponse->logistic->getData() ?? $data->all()
+        ], 60 * 60 * 6);
 
         return $response->withJson([
-            'logistic' => (string) $token,
+            'logistic' => (string) $logistic,
             'address' => $waybillResponse->address,
             'waybill' => $waybillResponse->logistic->getWaybill(),
             'status' => [
