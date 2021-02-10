@@ -40,7 +40,7 @@ class WaybillHandlerAction implements ActionInterface
         /** @var Registration $registration */
         $registration = Registration::find();
 
-        $logistic = $registration->getOutputToken([
+        $logistic = $registration->getSpecialRequestToken([
             'waybill' => $waybillResponse->logistic->getWaybill(),
             'status' => $waybillResponse->logistic->getStatus(),
             'data' => $waybillResponse->logistic->getData() ?? $data->all()
