@@ -52,7 +52,7 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
         return $data['shippingId'];
     }
 
-    protected function lockOrder(int $timeout, Dot $order, Batch $batch): bool
+    protected function lockOrder(int $timeout, int $orderId, Batch $batch): bool
     {
         $client = $batch->getApiClient();
 
@@ -65,7 +65,7 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
         ';
 
         $response = new Dot($client->query($query, [
-            'id' => $order['id'],
+            'id' => $orderId,
             'timeout' => $timeout,
         ])->getData());
 
