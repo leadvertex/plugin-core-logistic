@@ -7,7 +7,7 @@
 
 use Leadvertex\Plugin\Components\Batch\BatchContainer;
 use Leadvertex\Plugin\Components\Db\Components\Connector;
-use Leadvertex\Plugin\Components\Form\Components\AutocompleteRegistry;
+use Leadvertex\Plugin\Components\Form\Autocomplete\AutocompleteRegistry;
 use Leadvertex\Plugin\Components\Form\Form;
 use Leadvertex\Plugin\Components\Info\Developer;
 use Leadvertex\Plugin\Components\Info\Info;
@@ -15,6 +15,7 @@ use Leadvertex\Plugin\Components\Info\PluginType;
 use Leadvertex\Plugin\Components\Settings\Settings;
 use Leadvertex\Plugin\Components\Translations\Translator;
 use Leadvertex\Plugin\Core\Actions\UploadAction;
+use Leadvertex\Plugin\Core\Logistic\Components\BatchShippingHandler;
 use Leadvertex\Plugin\Core\Logistic\Components\Waybill\WaybillContainer;
 use Leadvertex\Plugin\Core\Logistic\Components\Waybill\WaybillHandlerInterface;
 use Medoo\Medoo;
@@ -70,7 +71,7 @@ BatchContainer::config(
 //        default: return null;
 //    }
     },
-    new BatchHandlerInterface()
+    new BatchShippingHandler()
 );
 
 # 8. Configure waybill form and handler
