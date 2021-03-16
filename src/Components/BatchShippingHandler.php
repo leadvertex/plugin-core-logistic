@@ -9,6 +9,7 @@ namespace Leadvertex\Plugin\Core\Logistic\Components;
 
 
 use Adbar\Dot;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Response;
 use Leadvertex\Plugin\Components\Access\Registration\Registration;
 use Leadvertex\Plugin\Components\Batch\Batch;
@@ -77,7 +78,7 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
      * @param string $shippingId
      * @param array $orders
      * @return Response|ResponseInterface
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
     protected function addOrders(Batch $batch, string $shippingId, array $orders): ResponseInterface
     {
@@ -105,23 +106,23 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
      * @param string $shippingId
      * @param int $ordersCount
      * @return Response|ResponseInterface
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
-    protected function markAsCompleted(Batch $batch, string $shippingId, int $ordersCount): ResponseInterface
+    protected function markAsExported(Batch $batch, string $shippingId, int $ordersCount): ResponseInterface
     {
         $inputToken = $batch->getToken()->getInputToken();
         $uri = (new Path($inputToken->getClaim('iss')))
             ->down('companies')
             ->down($inputToken->getClaim('cid'))
             ->down('CRM/plugin/logistic/shipping')
-            ->down($shippingId);
+            ->down($shippingId)
+            ->down('status/exported');
 
         return Registration::find()->makeSpecialRequest(
             'POST',
             $uri,
             [
                 'shippingId' => $shippingId,
-                'status' => "completed",
                 'orders' => $ordersCount,
             ],
             60 * 10
@@ -132,7 +133,7 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
      * @param Batch $batch
      * @param string $shippingId
      * @return Response|ResponseInterface
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
     protected function markAsFailed(Batch $batch, string $shippingId): ResponseInterface
     {
@@ -141,14 +142,14 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
             ->down('companies')
             ->down($inputToken->getClaim('cid'))
             ->down('CRM/plugin/logistic/shipping')
-            ->down($shippingId);
+            ->down($shippingId)
+            ->down('status/failed');
 
         return Registration::find()->makeSpecialRequest(
             'POST',
             $uri,
             [
                 'shippingId' => $shippingId,
-                'status' => "failed",
             ],
             60 * 10
         );
