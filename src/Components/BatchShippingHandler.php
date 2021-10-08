@@ -59,8 +59,8 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
 
         $query = '
             mutation($id: ID!, $timeout: Int!) {
-              orderMutation {
-                lockOrder(input: {id: $id, timeout: $timeout})
+              lockMutation {
+                lockEntity(input: { entity: { entity: Order, id: $id }, timeout: $timeout })
               }
             }
         ';
@@ -70,7 +70,7 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
             'timeout' => $timeout,
         ])->getData());
 
-        return $response->get('orderMutation.lockOrder', false);
+        return $response->get('lockMutation.lockEntity', false);
     }
 
     /**
