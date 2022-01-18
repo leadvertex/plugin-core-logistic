@@ -19,6 +19,6 @@
     "php": ">=7.4.0",
     "ext-json": "*",
     "leadvertex/plugin-core": "^0.3.0",
-    "leadvertex/plugin-component-logistic": "^0.3.3"
+    "leadvertex/plugin-component-logistic": "^0.4.0"
   }
 }

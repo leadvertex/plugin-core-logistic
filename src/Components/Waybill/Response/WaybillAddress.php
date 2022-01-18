@@ -24,7 +24,7 @@ class WaybillAddress implements JsonSerializable
         $this->address = $address;
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return [
             'field' => $this->field,
