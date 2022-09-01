@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  php-cli:
+    build:
+      context: "docker"
+      dockerfile: php-cli.docker
+    volumes:
+      - ./:/app
+    environment:
+      PHP_IDE_CONFIG: "serverName=plugin.core-logistic"
+      XDEBUG_CONFIG: "remote_host=host.docker.internal remote_enable=1 remote_autostart=1"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    working_dir: /app
+    tty: true

@@ -7,6 +7,7 @@
 
 use Leadvertex\Plugin\Components\Batch\BatchContainer;
 use Leadvertex\Plugin\Components\Db\Components\Connector;
+use Leadvertex\Plugin\Components\Db\Components\PluginReference;
 use Leadvertex\Plugin\Components\Form\Autocomplete\AutocompleteRegistry;
 use Leadvertex\Plugin\Components\Form\Form;
 use Leadvertex\Plugin\Components\Info\Developer;
@@ -25,7 +26,8 @@ use XAKEPEHOK\Path\Path;
 # 1. Configure DB (for SQLite *.db file and parent directory should be writable)
 Connector::config(new Medoo([
     'database_type' => 'sqlite',
-    'database_file' => Path::root()->down('db/database.db')
+    'database_file' => Path::root()->down('testDB.db'),
+    'debug_mode' => true,
 ]));
 
 # 2. Set plugin default language
@@ -49,34 +51,3 @@ Info::config(
         'example.com',
     )
 );
-
-# 5. Configure settings form
-Settings::setForm(fn() => new Form());
-
-# 6. Configure form autocompletes (or remove this block if dont used)
-AutocompleteRegistry::config(function (string $name) {
-//    switch ($name) {
-//        case 'status': return new StatusAutocomplete();
-//        case 'user': return new UserAutocomplete();
-//        default: return null;
-//    }
-});
-
-# 7. Configure batch forms and handler (or remove this block if dont used)
-//BatchContainer::config(
-//    function (int $number) {
-////    switch ($number) {
-////        case 1: return new Form();
-////        case 2: return new Form();
-////        case 3: return new Form();
-////        default: return null;
-////    }
-//    },
-//    new BatchShippingHandler()
-//);
-
-# 8. Configure waybill form and handler
-//WaybillContainer::config(
-//    fn() => new WaybillForm(),
-//    new WaybillHandlerInterface()
-//);

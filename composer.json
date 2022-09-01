@@ -20,5 +20,9 @@
     "ext-json": "*",
     "leadvertex/plugin-core": "^0.3.0",
     "leadvertex/plugin-component-logistic": "^0.4.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5",
+    "mockery/mockery": "^1.5"
   }
 }
