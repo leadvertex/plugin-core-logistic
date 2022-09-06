@@ -13,6 +13,7 @@ use Leadvertex\Plugin\Components\Logistic\Exceptions\LogisticStatusTooLongExcept
 use Leadvertex\Plugin\Components\Logistic\LogisticStatus;
 use Leadvertex\Plugin\Components\SpecialRequestDispatcher\Components\SpecialRequest;
 use Leadvertex\Plugin\Components\SpecialRequestDispatcher\Models\SpecialRequestTask;
+use Leadvertex\Plugin\Core\Logistic\Components\Track\Exception\TrackException;
 use Leadvertex\Plugin\Core\Logistic\Services\LogisticStatusesResolverService;
 use Medoo\Medoo;
 use ReflectionException;
@@ -130,13 +131,18 @@ class Track extends Model
         return $this->statuses;
     }
 
+    /**
+     * @param LogisticStatus $status
+     * @return void
+     * @throws TrackException
+     */
     public function addStatus(LogisticStatus $status): void
     {
         $filtered = self::filterNewStatutes($this->statuses, [$status]);
         $status = reset($filtered);
         if ($status !== false) {
             $this->statuses[] = $status;
-//            $this->createNotification();
+            $this->createNotification();
         }
     }
 
@@ -145,14 +151,15 @@ class Track extends Model
      * @return void
      * @throws LogisticStatusTooLongException
      * @throws OutOfEnumException
+     * @throws TrackException
      */
     public function setStatuses(array $statuses): void
     {
         $oldStatusesCount = count($this->statuses);
         $this->statuses = self::mergeStatuses($this->statuses, $statuses);
-//        if ($oldStatusesCount != count($this->statuses)) {
-//            $this->createNotification();
-//        }
+        if ($oldStatusesCount != count($this->statuses)) {
+            $this->createNotification();
+        }
     }
 
     public static function filterNewStatutes(array $current, array $new): array
@@ -226,6 +233,9 @@ class Track extends Model
 
         Connector::setReference(new PluginReference($this->getCompanyId(), $this->getPluginAlias(), $this->getPluginId()));
         $registration = Registration::find();
+        if ($registration === null) {
+            throw new TrackException('Failed to create notify. Plugin is not registered.');
+        }
         $uri = (new Path($registration->getClusterUri()))
             ->down('companies')
             ->down(Connector::getReference()->getCompanyId())

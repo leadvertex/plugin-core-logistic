@@ -3,9 +3,11 @@
 namespace Leadvertex\Components\Track;
 
 use DateTimeImmutable;
+use Leadvertex\Plugin\Components\Access\Registration\Registration;
 use Leadvertex\Plugin\Components\Db\Components\PluginReference;
 use Leadvertex\Plugin\Components\Logistic\Exceptions\LogisticStatusTooLongException;
 use Leadvertex\Plugin\Components\Logistic\LogisticStatus;
+use Leadvertex\Plugin\Components\SpecialRequestDispatcher\Models\SpecialRequestTask;
 use Leadvertex\Plugin\Core\Logistic\Components\Track\Track;
 use Leadvertex\Helpers\LogisticTestCase;
 use Mockery;
@@ -150,7 +152,10 @@ class TrackTest extends LogisticTestCase
      */
     public function testAddStatus(array $current, LogisticStatus $status, array $expected): void
     {
-        $track = new Track($this->pluginReference, 'track', 'shiping', '1', true);
+        $track = Mockery::mock(Track::class)->makePartial();
+        $track->shouldAllowMockingProtectedMethods();
+        $track->shouldReceive('createNotification')->andReturnNull();
+
         $track->setStatuses($current);
 
         $track->addStatus($status);
