@@ -37,7 +37,7 @@ class LogisticStatusesResolverService
     /**
      * @return LogisticStatus[]
      */
-    private function sort(): array
+    public function sort(): array
     {
         $result = [];
         foreach (LogisticStatus::values() as $code) {

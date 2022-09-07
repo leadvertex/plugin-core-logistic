@@ -3,14 +3,19 @@
 namespace Leadvertex\Plugin\Core\Logistic\Components\Track;
 
 use Exception;
+use Leadvertex\Components\Address\Address;
+use Leadvertex\Components\Address\Location;
 use Leadvertex\Plugin\Components\Access\Registration\Registration;
 use Leadvertex\Plugin\Components\Db\Components\Connector;
 use Leadvertex\Plugin\Components\Db\Components\PluginReference;
 use Leadvertex\Plugin\Components\Db\Exceptions\DatabaseException;
 use Leadvertex\Plugin\Components\Db\Helpers\UuidHelper;
 use Leadvertex\Plugin\Components\Db\Model;
+use Leadvertex\Plugin\Components\Logistic\Components\OpeningHours;
 use Leadvertex\Plugin\Components\Logistic\Exceptions\LogisticStatusTooLongException;
+use Leadvertex\Plugin\Components\Logistic\LogisticOffice;
 use Leadvertex\Plugin\Components\Logistic\LogisticStatus;
+use Leadvertex\Plugin\Components\Logistic\Waybill\Waybill;
 use Leadvertex\Plugin\Components\SpecialRequestDispatcher\Components\SpecialRequest;
 use Leadvertex\Plugin\Components\SpecialRequestDispatcher\Models\SpecialRequestTask;
 use Leadvertex\Plugin\Core\Logistic\Components\Track\Exception\TrackException;
@@ -19,6 +24,7 @@ use Medoo\Medoo;
 use ReflectionException;
 use XAKEPEHOK\EnumHelper\Exception\OutOfEnumException;
 use XAKEPEHOK\Path\Path;
+use XAKEPEHOK\ValueObjectBuilder\VOB;
 
 class Track extends Model
 {
@@ -52,6 +58,10 @@ class Track extends Model
     protected bool $isCod;
 
     protected string $segment;
+
+    protected ?Waybill $waybill = null;
+
+    protected ?LogisticOffice $logisticOffice = null;
 
     public function __construct(PluginReference $pluginReference, string $track, string $shippingId, string $orderId, bool $isCod)
     {
@@ -239,16 +249,20 @@ class Track extends Model
         $uri = (new Path($registration->getClusterUri()))
             ->down('companies')
             ->down(Connector::getReference()->getCompanyId())
-            ->down('CRM/plugin/logistic/shipping/orders');
+            ->down('CRM/plugin/logistic/shipping/status');
 
         $this->setNotified($lastStatus);
-        $codes = array_map(fn(LogisticStatus $status) => $status->getCode(), $this->getStatuses());
 
         $jwt = $registration->getSpecialRequestToken([
-            'shippingId' => $this->getShippingId(),
-            'orderId' => $this->getOrderId(),
-            'status' => $lastStatus->jsonSerialize(),
-            'codes' => $codes,
+            'orders' => [
+                $this->getOrderId() => [
+                    'waybill' => $this->waybill->jsonSerialize(),
+                    'statuses' => $service->sort(),
+                    'status' => $lastStatus->jsonSerialize(),
+                    'info' => $this->logisticOffice->jsonSerialize(),
+                    'data' => null,
+                ],
+            ],
         ], 24 * 60 * 60);
 
         $body = json_encode([
@@ -279,6 +293,26 @@ class Track extends Model
     public function isCod(): bool
     {
         return $this->isCod;
+    }
+
+    public function getWaybill(): ?Waybill
+    {
+        return $this->waybill;
+    }
+
+    public function setWaybill(Waybill $waybill): void
+    {
+        $this->waybill = $waybill;
+    }
+
+    public function getLogisticOffice(): ?LogisticOffice
+    {
+        return $this->logisticOffice;
+    }
+
+    public function setLogisticOffice(LogisticOffice $logisticOffice): void
+    {
+        $this->logisticOffice = $logisticOffice;
     }
 
     /**
@@ -324,6 +358,8 @@ class Track extends Model
         $data['statuses'] = json_encode($data['statuses']);
         $data['notificationsHashes'] = json_encode($data['notificationsHashes']);
         $data['isCod'] = (int)$data['isCod'];
+        $data['waybill'] = json_encode($data['waybill']);
+        $data['logisticOffice'] = json_encode($data['logisticOffice']);
         return $data;
     }
 
@@ -340,8 +376,26 @@ class Track extends Model
         $data['statuses'] = array_map(function (array $item) {
             return new LogisticStatus($item['code'], $item['text'], $item['timestamp']);
         }, json_decode($data['statuses'], true));
-        $data['notifications'] = json_decode($data['notifications'], true);
+        $data['notificationsHashes'] = json_decode($data['notificationsHashes'], true);
         $data['isCod'] = (bool)$data['isCod'];
+        $data['waybill'] = Waybill::createFromArray(json_decode($data['waybill'], true));
+        $logisticOfficeData = json_decode($data['logisticOffice'], true);
+        $data['logisticOffice'] = new LogisticOffice(
+            VOB::buildFromValues(Address::class, [
+                $logisticOfficeData['address']['region'],
+                $logisticOfficeData['address']['city'],
+                $logisticOfficeData['address']['address_1'],
+                $logisticOfficeData['address']['address_2'] ?? '',
+                $logisticOfficeData['address']['countryCode'] ?? null,
+                $logisticOfficeData['address']['countryCode'] ?? null,
+                VOB::buildFromValues(Location::class, [
+                    $logisticOfficeData['address']['location']['latitude'] ?? null,
+                    $logisticOfficeData['address']['location']['longitude'] ?? null,
+                ]),
+            ]),
+            $logisticOfficeData['phones'] ?? [],
+            VOB::build(OpeningHours::class, $logisticOfficeData['openingHours'] ?? null),
+        );
         return $data;
     }
 
@@ -352,7 +406,10 @@ class Track extends Model
 
     public static function schema(): array
     {
-        return array_merge([
+        return [
+            'companyId' => ['INT', 'NOT NULL'],
+            'pluginAlias' => ['VARCHAR(255)', 'NOT NULL'],
+            'pluginId' => ['INT', 'NOT NULL'],
             'orderId' => ['VARCHAR(50)'],
             'track' => ['VARCHAR(50)'],
             'shippingId' => ['VARCHAR(50)'],
@@ -360,12 +417,14 @@ class Track extends Model
             'nextTrackingAt' => ['INT', 'NULL', 'DEFAULT NULL'],
             'lastTrackedAt' => ['INT', 'NULL', 'DEFAULT NULL'],
             'statuses' => ['TEXT'],
-            'notifications' => ['TEXT'],
+            'notificationsHashes' => ['TEXT'],
             'notifiedAt' => ['INT'],
             'stoppedAt' => ['INT', 'NULL', 'DEFAULT NULL'],
             'isCod' => ['INT'],
+            'waybill' => ['TEXT'],
+            'logisticOffice' => ['TEXT'],
             'segment' => ['CHAR(1)'],
-        ]);
+        ];
     }
 
     public static function afterTableCreate(Medoo $db): void

@@ -3,11 +3,13 @@
 namespace Leadvertex\Components\Track;
 
 use DateTimeImmutable;
-use Leadvertex\Plugin\Components\Access\Registration\Registration;
+use Leadvertex\Components\Address\Address;
+use Leadvertex\Components\MoneyValue\MoneyValue;
 use Leadvertex\Plugin\Components\Db\Components\PluginReference;
 use Leadvertex\Plugin\Components\Logistic\Exceptions\LogisticStatusTooLongException;
+use Leadvertex\Plugin\Components\Logistic\LogisticOffice;
 use Leadvertex\Plugin\Components\Logistic\LogisticStatus;
-use Leadvertex\Plugin\Components\SpecialRequestDispatcher\Models\SpecialRequestTask;
+use Leadvertex\Plugin\Components\Logistic\Waybill\Waybill;
 use Leadvertex\Plugin\Core\Logistic\Components\Track\Track;
 use Leadvertex\Helpers\LogisticTestCase;
 use Mockery;
@@ -111,6 +113,32 @@ class TrackTest extends LogisticTestCase
         $this->assertSame([$status->getHash()], $this->track->getNotificationsHashes());
     }
 
+    public function testGetSetWaybill(): void
+    {
+        $this->assertNull($this->track->getWaybill());
+
+        $expected = new Waybill(
+            new \Leadvertex\Plugin\Components\Logistic\Waybill\Track('123456'),
+            new MoneyValue(100)
+        );
+        $this->track->setWaybill($expected);
+
+        $this->assertEquals($expected, $this->track->getWaybill());
+    }
+
+    public function testGetSetLogisticOffice(): void
+    {
+        $this->assertNull($this->track->getLogisticOffice());
+
+        $expected = new LogisticOffice(
+            new Address('region', 'city', 'a1'),
+            ['7898877777'],
+            null,
+        );
+        $this->track->setLogisticOffice($expected);
+
+        $this->assertEquals($expected, $this->track->getLogisticOffice());
+    }
 
     public function addStatusDataProvider(): array
     {

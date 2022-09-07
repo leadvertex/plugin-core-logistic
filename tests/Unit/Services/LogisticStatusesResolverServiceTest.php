@@ -5,9 +5,10 @@ namespace Leadvertex\Services;
 use Leadvertex\Plugin\Components\Db\Components\PluginReference;
 use Leadvertex\Plugin\Components\Logistic\Exceptions\LogisticStatusTooLongException;
 use Leadvertex\Plugin\Components\Logistic\LogisticStatus;
+use Leadvertex\Plugin\Core\Logistic\Components\Track\Exception\TrackException;
 use Leadvertex\Plugin\Core\Logistic\Components\Track\Track;
 use Leadvertex\Plugin\Core\Logistic\Services\LogisticStatusesResolverService;
-use ReflectionException;
+use Mockery;
 use Leadvertex\Helpers\LogisticTestCase;
 use XAKEPEHOK\EnumHelper\Exception\OutOfEnumException;
 
@@ -17,8 +18,8 @@ class LogisticStatusesResolverServiceTest extends LogisticTestCase
 
     protected function setUp(): void
     {
-        $pluginReference = new PluginReference('1', 'alias', '1');
-        $this->track = new Track($pluginReference, 'track', 'shiping', '1', true);
+        $this->track = Mockery::mock(Track::class)->makePartial();
+        $this->track->shouldAllowMockingProtectedMethods()->shouldReceive('createNotification')->andReturnNull();
     }
 
     public function getGetNextStatusForNotifyDataProvider(): array
@@ -101,6 +102,7 @@ class LogisticStatusesResolverServiceTest extends LogisticTestCase
      *
      * @throws LogisticStatusTooLongException
      * @throws OutOfEnumException
+     * @throws TrackException
      * @dataProvider getGetNextStatusForNotifyDataProvider
      */
     public function testGetNextStatusForNotify(array $statuses, array $sentStatuses, ?LogisticStatus $expected): void
@@ -193,8 +195,9 @@ class LogisticStatusesResolverServiceTest extends LogisticTestCase
      * @param LogisticStatus[] $statuses
      * @param LogisticStatus[] $expected
      * @return void
-     * @throws ReflectionException
-     *
+     * @throws LogisticStatusTooLongException
+     * @throws OutOfEnumException
+     * @throws TrackException
      * @dataProvider getStatusesForSortDataProvider
      */
     public function testSort(array $statuses, array $expected): void
@@ -202,10 +205,7 @@ class LogisticStatusesResolverServiceTest extends LogisticTestCase
         $this->track->setStatuses($statuses);
         $service = new LogisticStatusesResolverService($this->track);
 
-        $sortMethod = self::getMethod('sort');
-        $actual = $sortMethod->invoke($service, $statuses);
-
-        $this->assertEquals($expected, $actual);
+        $this->assertEquals($expected, $service->sort());
     }
 
 }
