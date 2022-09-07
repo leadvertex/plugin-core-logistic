@@ -254,15 +254,12 @@ class Track extends Model
         $this->setNotified($lastStatus);
 
         $jwt = $registration->getSpecialRequestToken([
-            'orders' => [
-                $this->getOrderId() => [
-                    'waybill' => $this->waybill->jsonSerialize(),
-                    'statuses' => $service->sort(),
-                    'status' => $lastStatus->jsonSerialize(),
-                    'info' => $this->logisticOffice->jsonSerialize(),
-                    'data' => null,
-                ],
-            ],
+            'orderId' => $this->getOrderId(),
+            'waybill' => $this->waybill->jsonSerialize(),
+            'statuses' => $service->sort(),
+            'status' => $lastStatus->jsonSerialize(),
+            'info' => $this->logisticOffice->jsonSerialize(),
+            'data' => null,
         ], 24 * 60 * 60);
 
         $body = json_encode([
@@ -385,12 +382,12 @@ class Track extends Model
                 $logisticOfficeData['address']['region'],
                 $logisticOfficeData['address']['city'],
                 $logisticOfficeData['address']['address_1'],
-                $logisticOfficeData['address']['address_2'] ?? '',
-                $logisticOfficeData['address']['countryCode'] ?? null,
-                $logisticOfficeData['address']['countryCode'] ?? null,
+                    $logisticOfficeData['address']['address_2'] ?? '',
+                    $logisticOfficeData['address']['countryCode'] ?? null,
+                    $logisticOfficeData['address']['countryCode'] ?? null,
                 VOB::buildFromValues(Location::class, [
-                    $logisticOfficeData['address']['location']['latitude'] ?? null,
-                    $logisticOfficeData['address']['location']['longitude'] ?? null,
+                        $logisticOfficeData['address']['location']['latitude'] ?? null,
+                        $logisticOfficeData['address']['location']['longitude'] ?? null,
                 ]),
             ]),
             $logisticOfficeData['phones'] ?? [],
