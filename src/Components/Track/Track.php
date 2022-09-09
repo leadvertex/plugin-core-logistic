@@ -12,6 +12,7 @@ use Leadvertex\Plugin\Components\Db\Exceptions\DatabaseException;
 use Leadvertex\Plugin\Components\Db\Helpers\UuidHelper;
 use Leadvertex\Plugin\Components\Db\Model;
 use Leadvertex\Plugin\Components\Logistic\Components\OpeningHours;
+use Leadvertex\Plugin\Components\Logistic\Exceptions\LogisticOfficePhoneException;
 use Leadvertex\Plugin\Components\Logistic\Exceptions\LogisticStatusTooLongException;
 use Leadvertex\Plugin\Components\Logistic\LogisticOffice;
 use Leadvertex\Plugin\Components\Logistic\LogisticStatus;
@@ -21,7 +22,6 @@ use Leadvertex\Plugin\Components\SpecialRequestDispatcher\Models\SpecialRequestT
 use Leadvertex\Plugin\Core\Logistic\Components\Track\Exception\TrackException;
 use Leadvertex\Plugin\Core\Logistic\Services\LogisticStatusesResolverService;
 use Medoo\Medoo;
-use ReflectionException;
 use XAKEPEHOK\EnumHelper\Exception\OutOfEnumException;
 use XAKEPEHOK\Path\Path;
 use XAKEPEHOK\ValueObjectBuilder\VOB;
@@ -59,23 +59,24 @@ class Track extends Model
 
     protected string $segment;
 
-    protected ?Waybill $waybill = null;
+    protected Waybill $waybill;
 
     protected ?LogisticOffice $logisticOffice = null;
 
-    public function __construct(PluginReference $pluginReference, string $track, string $shippingId, string $orderId, bool $isCod)
+    public function __construct(PluginReference $pluginReference, Waybill $waybill, string $shippingId, string $orderId, bool $isCod)
     {
         $this->companyId = $pluginReference->getCompanyId();
         $this->pluginAlias = $pluginReference->getAlias();
         $this->pluginId = $pluginReference->getId();
 
         $this->id = UuidHelper::getUuid();
-        $this->track = $track;
+        $this->waybill = $waybill;
+        $this->track = $waybill->getTrack();
         $this->shippingId = $shippingId;
         $this->orderId = $orderId;
         $this->createdAt = time();
         $this->isCod = $isCod;
-        $this->segment = mb_substr(md5($track), -1);
+        $this->segment = mb_substr(md5($waybill->getTrack()), -1);
     }
 
     public function getCompanyId(): string
@@ -255,10 +256,10 @@ class Track extends Model
 
         $jwt = $registration->getSpecialRequestToken([
             'orderId' => $this->getOrderId(),
-            'waybill' => $this->waybill->jsonSerialize(),
+            'waybill' => $this->getWaybill()->jsonSerialize(),
             'statuses' => $service->sort(),
             'status' => $lastStatus->jsonSerialize(),
-            'info' => $this->logisticOffice->jsonSerialize(),
+            'info' => $this->getLogisticOffice() !== null ? $this->getLogisticOffice()->jsonSerialize() : null,
             'data' => null,
         ], 24 * 60 * 60);
 
@@ -292,7 +293,7 @@ class Track extends Model
         return $this->isCod;
     }
 
-    public function getWaybill(): ?Waybill
+    public function getWaybill(): Waybill
     {
         return $this->waybill;
     }
@@ -365,6 +366,7 @@ class Track extends Model
      * @return array
      * @throws LogisticStatusTooLongException
      * @throws OutOfEnumException
+     * @throws LogisticOfficePhoneException
      */
     protected static function afterRead(array $data): array
     {

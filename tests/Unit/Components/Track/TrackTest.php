@@ -19,12 +19,18 @@ class TrackTest extends LogisticTestCase
 {
     private Track $track;
 
+    private Waybill $waybill;
+
     private PluginReference $pluginReference;
 
     protected function setUp(): void
     {
+        $this->waybill = new Waybill(
+            new \Leadvertex\Plugin\Components\Logistic\Waybill\Track('123456'),
+            new MoneyValue(100)
+        );
         $this->pluginReference = new PluginReference('1', 'alias', '1');
-        $this->track = new Track($this->pluginReference, 'track', 'shiping', '1', true);
+        $this->track = new Track($this->pluginReference, $this->waybill, 'shiping', '1', true);
     }
 
     public function testGetPluginReferenceFields(): void
@@ -41,7 +47,7 @@ class TrackTest extends LogisticTestCase
 
     public function testGetTrack(): void
     {
-        $this->assertSame('track', $this->track->getTrack());
+        $this->assertSame('123456', $this->track->getTrack());
     }
 
     public function testGetShippingId(): void
@@ -101,7 +107,7 @@ class TrackTest extends LogisticTestCase
     public function testGetCod(): void
     {
         $this->assertTrue($this->track->isCod());
-        $track = new Track($this->pluginReference, 'track', 'shiping', '1', false);
+        $track = new Track($this->pluginReference, $this->waybill, 'shiping', '1', false);
         $this->assertFalse($track->isCod());
     }
 
@@ -115,10 +121,10 @@ class TrackTest extends LogisticTestCase
 
     public function testGetSetWaybill(): void
     {
-        $this->assertNull($this->track->getWaybill());
+        $this->assertEquals($this->waybill, $this->track->getWaybill());
 
         $expected = new Waybill(
-            new \Leadvertex\Plugin\Components\Logistic\Waybill\Track('123456'),
+            new \Leadvertex\Plugin\Components\Logistic\Waybill\Track('track22'),
             new MoneyValue(100)
         );
         $this->track->setWaybill($expected);
