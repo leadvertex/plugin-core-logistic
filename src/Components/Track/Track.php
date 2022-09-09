@@ -379,22 +379,9 @@ class Track extends Model
         $data['isCod'] = (bool)$data['isCod'];
         $data['waybill'] = Waybill::createFromArray(json_decode($data['waybill'], true));
         $logisticOfficeData = json_decode($data['logisticOffice'], true);
-        $data['logisticOffice'] = new LogisticOffice(
-            VOB::buildFromValues(Address::class, [
-                $logisticOfficeData['address']['region'],
-                $logisticOfficeData['address']['city'],
-                $logisticOfficeData['address']['address_1'],
-                    $logisticOfficeData['address']['address_2'] ?? '',
-                    $logisticOfficeData['address']['countryCode'] ?? null,
-                    $logisticOfficeData['address']['countryCode'] ?? null,
-                VOB::buildFromValues(Location::class, [
-                        $logisticOfficeData['address']['location']['latitude'] ?? null,
-                        $logisticOfficeData['address']['location']['longitude'] ?? null,
-                ]),
-            ]),
-            $logisticOfficeData['phones'] ?? [],
-            VOB::build(OpeningHours::class, $logisticOfficeData['openingHours'] ?? null),
-        );
+        $data['logisticOffice'] = $logisticOfficeData !== null
+            ? LogisticOffice::createFromArray(json_decode($data['logisticOffice'], true))
+            : null;
         return $data;
     }
 
