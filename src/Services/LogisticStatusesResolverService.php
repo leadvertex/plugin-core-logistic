@@ -14,6 +14,11 @@ class LogisticStatusesResolverService
         $this->track = $track;
     }
 
+    /**
+     * Данный метод необходим для того, чтобы найти статус для нотификации, если мы нашли актуальный статус, то его отправляем
+     * иначе не нужно отправлять нотификацию на backend lv2
+     * @return LogisticStatus|null
+     */
     public function getLastStatusForNotify(): ?LogisticStatus
     {
         $statuses = $this->sort();
@@ -35,6 +40,8 @@ class LogisticStatusesResolverService
 
 
     /**
+     * Данный метод сортирует статусы согласно порядку в @see LogisticStatus::values()
+     * если у нас есть несколько статусов под одним кодом, то мы дополнительно их сортируем по времени от меньшего к большему
      * @return LogisticStatus[]
      */
     public function sort(): array

@@ -3,15 +3,11 @@
 namespace Leadvertex\Plugin\Core\Logistic\Components\Track;
 
 use Exception;
-use Leadvertex\Components\Address\Address;
-use Leadvertex\Components\Address\Location;
 use Leadvertex\Plugin\Components\Access\Registration\Registration;
 use Leadvertex\Plugin\Components\Db\Components\Connector;
 use Leadvertex\Plugin\Components\Db\Components\PluginReference;
 use Leadvertex\Plugin\Components\Db\Exceptions\DatabaseException;
-use Leadvertex\Plugin\Components\Db\Helpers\UuidHelper;
 use Leadvertex\Plugin\Components\Db\Model;
-use Leadvertex\Plugin\Components\Logistic\Components\OpeningHours;
 use Leadvertex\Plugin\Components\Logistic\Exceptions\LogisticOfficePhoneException;
 use Leadvertex\Plugin\Components\Logistic\Exceptions\LogisticStatusTooLongException;
 use Leadvertex\Plugin\Components\Logistic\LogisticOffice;
@@ -24,7 +20,6 @@ use Leadvertex\Plugin\Core\Logistic\Services\LogisticStatusesResolverService;
 use Medoo\Medoo;
 use XAKEPEHOK\EnumHelper\Exception\OutOfEnumException;
 use XAKEPEHOK\Path\Path;
-use XAKEPEHOK\ValueObjectBuilder\VOB;
 
 class Track extends Model
 {
@@ -55,27 +50,23 @@ class Track extends Model
 
     protected ?int $stoppedAt = null;
 
-    protected bool $isCod;
-
     protected string $segment;
 
     protected Waybill $waybill;
 
     protected ?LogisticOffice $logisticOffice = null;
 
-    public function __construct(PluginReference $pluginReference, Waybill $waybill, string $shippingId, string $orderId, bool $isCod)
+    public function __construct(PluginReference $pluginReference, Waybill $waybill, string $shippingId, string $orderId)
     {
         $this->companyId = $pluginReference->getCompanyId();
         $this->pluginAlias = $pluginReference->getAlias();
         $this->pluginId = $pluginReference->getId();
 
-        $this->id = UuidHelper::getUuid();
+        $this->id = $orderId;
         $this->waybill = $waybill;
         $this->track = $waybill->getTrack();
         $this->shippingId = $shippingId;
-        $this->orderId = $orderId;
         $this->createdAt = time();
-        $this->isCod = $isCod;
         $this->segment = mb_substr(md5($waybill->getTrack()), -1);
     }
 
@@ -102,11 +93,6 @@ class Track extends Model
     public function getShippingId(): string
     {
         return $this->shippingId;
-    }
-
-    public function getOrderId(): string
-    {
-        return $this->orderId;
     }
 
     public function getCreatedAt(): int
@@ -145,12 +131,14 @@ class Track extends Model
     /**
      * @param LogisticStatus $status
      * @return void
+     * @throws LogisticStatusTooLongException
+     * @throws OutOfEnumException
      * @throws TrackException
      */
     public function addStatus(LogisticStatus $status): void
     {
-        $filtered = self::filterNewStatutes($this->statuses, [$status]);
-        $status = reset($filtered);
+        $filtered = self::mergeStatuses($this->statuses, [$status]);
+        $status = end($filtered);
         if ($status !== false) {
             $this->statuses[] = $status;
             $this->createNotification();
@@ -173,6 +161,14 @@ class Track extends Model
         }
     }
 
+    /**
+     * Фильтрует новые статусы, которые пришли от конкретной реализации плагина логистики.
+     * Находим hash от каждого нового статуса и сверяем их с hash уже существующих и оставляем только те, которые не совпали.
+     *
+     * @param array $current
+     * @param array $new
+     * @return array
+     */
     public static function filterNewStatutes(array $current, array $new): array
     {
         $hashes = array_map(fn(LogisticStatus $status) => $status->getHash(), $current);
@@ -180,6 +176,8 @@ class Track extends Model
     }
 
     /**
+     * Данный метод больше необходим для простановки маппинга кода @see LogisticStatus::RETURNING_TO_SENDER.
+     *
      * @param LogisticStatus[] $current
      * @param LogisticStatus[] $new
      * @return array
@@ -191,6 +189,10 @@ class Track extends Model
         $new = self::filterNewStatutes($current, $new);
         $current = array_merge($current, $new);
 
+        /**
+         * Проверяем есть ли в статусах @see LogisticStatus::RETURNED
+         * если его нет, то просто отдаем отфильтрованные статусы
+         */
         $returnStatuses = array_filter($current, function (LogisticStatus $status) {
             return $status->getCode() === LogisticStatus::RETURNED;
         });
@@ -198,6 +200,7 @@ class Track extends Model
             return $current;
         }
 
+        //сортируем статусы по времени
         usort($current, function (LogisticStatus $status_1, LogisticStatus $status_2) {
             if ($status_1->getTimestamp() === $status_2->getTimestamp()) {
                 return 0;
@@ -205,6 +208,10 @@ class Track extends Model
             return ($status_1->getTimestamp() < $status_2->getTimestamp()) ? -1 : 1;
         });
 
+        /**
+         * Находим статус возврата и все последующие после него искусственно делаем со статусом @see LogisticStatus::RETURNING_TO_SENDER
+         * исключение есть только для статуса @see LogisticStatus::DELIVERED_TO_SENDER
+         */
         $afterReturned = false;
         foreach ($current as &$status) {
             if ($afterReturned && $status->getCode() !== LogisticStatus::DELIVERED_TO_SENDER) {
@@ -255,7 +262,7 @@ class Track extends Model
         $this->setNotified($lastStatus);
 
         $jwt = $registration->getSpecialRequestToken([
-            'orderId' => $this->getOrderId(),
+            'orderId' => $this->getId(),
             'waybill' => $this->getWaybill()->jsonSerialize(),
             'statuses' => $service->sort(),
             'status' => $lastStatus->jsonSerialize(),
@@ -286,11 +293,6 @@ class Track extends Model
     public function setStoppedAt(): void
     {
         $this->stoppedAt = time();
-    }
-
-    public function isCod(): bool
-    {
-        return $this->isCod;
     }
 
     public function getWaybill(): Waybill
@@ -355,7 +357,6 @@ class Track extends Model
 
         $data['statuses'] = json_encode($data['statuses']);
         $data['notificationsHashes'] = json_encode($data['notificationsHashes']);
-        $data['isCod'] = (int)$data['isCod'];
         $data['waybill'] = json_encode($data['waybill']);
         $data['logisticOffice'] = json_encode($data['logisticOffice']);
         return $data;
@@ -376,7 +377,6 @@ class Track extends Model
             return new LogisticStatus($item['code'], $item['text'], $item['timestamp']);
         }, json_decode($data['statuses'], true));
         $data['notificationsHashes'] = json_decode($data['notificationsHashes'], true);
-        $data['isCod'] = (bool)$data['isCod'];
         $data['waybill'] = Waybill::createFromArray(json_decode($data['waybill'], true));
         $logisticOfficeData = json_decode($data['logisticOffice'], true);
         $data['logisticOffice'] = $logisticOfficeData !== null
@@ -396,7 +396,6 @@ class Track extends Model
             'companyId' => ['INT', 'NOT NULL'],
             'pluginAlias' => ['VARCHAR(255)', 'NOT NULL'],
             'pluginId' => ['INT', 'NOT NULL'],
-            'orderId' => ['VARCHAR(50)'],
             'track' => ['VARCHAR(50)'],
             'shippingId' => ['VARCHAR(50)'],
             'createdAt' => ['INT', 'NOT NULL'],
@@ -406,7 +405,6 @@ class Track extends Model
             'notificationsHashes' => ['TEXT'],
             'notifiedAt' => ['INT'],
             'stoppedAt' => ['INT', 'NULL', 'DEFAULT NULL'],
-            'isCod' => ['INT'],
             'waybill' => ['TEXT'],
             'logisticOffice' => ['TEXT'],
             'segment' => ['CHAR(1)'],

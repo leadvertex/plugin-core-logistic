@@ -10,6 +10,7 @@ use Leadvertex\Plugin\Components\Logistic\Exceptions\LogisticStatusTooLongExcept
 use Leadvertex\Plugin\Components\Logistic\LogisticOffice;
 use Leadvertex\Plugin\Components\Logistic\LogisticStatus;
 use Leadvertex\Plugin\Components\Logistic\Waybill\Waybill;
+use Leadvertex\Plugin\Core\Logistic\Components\Track\Exception\TrackException;
 use Leadvertex\Plugin\Core\Logistic\Components\Track\Track;
 use Leadvertex\Helpers\LogisticTestCase;
 use Mockery;
@@ -29,20 +30,20 @@ class TrackTest extends LogisticTestCase
             new \Leadvertex\Plugin\Components\Logistic\Waybill\Track('123456'),
             new MoneyValue(100)
         );
-        $this->pluginReference = new PluginReference('1', 'alias', '1');
-        $this->track = new Track($this->pluginReference, $this->waybill, 'shiping', '1', true);
+        $this->pluginReference = new PluginReference('1', 'alias', '2');
+        $this->track = new Track($this->pluginReference, $this->waybill, 'shipping', '3');
+    }
+
+    public function testGetId(): void
+    {
+        $this->assertSame('3', $this->track->getId());
     }
 
     public function testGetPluginReferenceFields(): void
     {
         $this->assertSame('1', $this->track->getCompanyId());
         $this->assertSame('alias', $this->track->getPluginAlias());
-        $this->assertSame('1', $this->track->getPluginId());
-    }
-
-    public function testGetOrderId(): void
-    {
-        $this->assertSame('1', $this->track->getOrderId());
+        $this->assertSame('2', $this->track->getPluginId());
     }
 
     public function testGetTrack(): void
@@ -52,7 +53,7 @@ class TrackTest extends LogisticTestCase
 
     public function testGetShippingId(): void
     {
-        $this->assertSame('shiping', $this->track->getShippingId());
+        $this->assertSame('shipping', $this->track->getShippingId());
     }
 
     public function testGetCreatedAt(): void
@@ -104,13 +105,6 @@ class TrackTest extends LogisticTestCase
         );
     }
 
-    public function testGetCod(): void
-    {
-        $this->assertTrue($this->track->isCod());
-        $track = new Track($this->pluginReference, $this->waybill, 'shiping', '1', false);
-        $this->assertFalse($track->isCod());
-    }
-
     public function testGetNotificationsHashes(): void
     {
         $status = new LogisticStatus(LogisticStatus::DELIVERED);
@@ -157,7 +151,10 @@ class TrackTest extends LogisticTestCase
             [
                 [new LogisticStatus(LogisticStatus::DELIVERED)],
                 new LogisticStatus(LogisticStatus::DELIVERED),
-                [new LogisticStatus(LogisticStatus::DELIVERED)],
+                [
+                    new LogisticStatus(LogisticStatus::DELIVERED),
+                    new LogisticStatus(LogisticStatus::DELIVERED),
+                ],
             ],
             [
                 [
@@ -171,6 +168,20 @@ class TrackTest extends LogisticTestCase
                     new LogisticStatus(LogisticStatus::UNREGISTERED),
                 ],
             ],
+            [
+                [
+                    new LogisticStatus(LogisticStatus::ACCEPTED),
+                    new LogisticStatus(LogisticStatus::IN_TRANSIT),
+                    new LogisticStatus(LogisticStatus::RETURNED),
+                ],
+                new LogisticStatus(LogisticStatus::PENDING, 'pending'),
+                [
+                    new LogisticStatus(LogisticStatus::ACCEPTED),
+                    new LogisticStatus(LogisticStatus::IN_TRANSIT),
+                    new LogisticStatus(LogisticStatus::RETURNED),
+                    new LogisticStatus(LogisticStatus::RETURNING_TO_SENDER, 'pending'),
+                ],
+            ],
         ];
     }
 
@@ -181,7 +192,7 @@ class TrackTest extends LogisticTestCase
      * @return void
      * @throws LogisticStatusTooLongException
      * @throws OutOfEnumException
-     *
+     * @throws TrackException
      * @dataProvider addStatusDataProvider
      */
     public function testAddStatus(array $current, LogisticStatus $status, array $expected): void
@@ -273,4 +284,26 @@ class TrackTest extends LogisticTestCase
     {
         $this->assertEquals($expected, Track::mergeStatuses($current, $new));
     }
+
+    public function testScheme(): void
+    {
+        $this->assertEquals([
+            'companyId' => ['INT', 'NOT NULL'],
+            'pluginAlias' => ['VARCHAR(255)', 'NOT NULL'],
+            'pluginId' => ['INT', 'NOT NULL'],
+            'track' => ['VARCHAR(50)'],
+            'shippingId' => ['VARCHAR(50)'],
+            'createdAt' => ['INT', 'NOT NULL'],
+            'nextTrackingAt' => ['INT', 'NULL', 'DEFAULT NULL'],
+            'lastTrackedAt' => ['INT', 'NULL', 'DEFAULT NULL'],
+            'statuses' => ['TEXT'],
+            'notificationsHashes' => ['TEXT'],
+            'notifiedAt' => ['INT'],
+            'stoppedAt' => ['INT', 'NULL', 'DEFAULT NULL'],
+            'waybill' => ['TEXT'],
+            'logisticOffice' => ['TEXT'],
+            'segment' => ['CHAR(1)'],
+        ], Track::schema());
+    }
+
 }
