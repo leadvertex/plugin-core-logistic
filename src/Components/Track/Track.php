@@ -34,8 +34,6 @@ class Track extends Model
 
     protected string $shippingId;
 
-    protected string $orderId;
-
     protected int $createdAt;
 
     protected ?int $nextTrackingAt = null;
