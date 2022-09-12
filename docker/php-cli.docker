@@ -1,0 +1,14 @@
+FROM disami115/lv-php-cli:7.4
+
+COPY ./php/php-cli.ini ${PHP_INI_DIR}/conf.d/php-cli.ini
+COPY ./php/composer.bash /tmp/composer.bash
+
+WORKDIR /app
+
+RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" \
+    && apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd \
+    && docker-php-ext-install sockets \
+    && docker-php-ext-enable gd sockets \
+    && bash /tmp/composer.bash

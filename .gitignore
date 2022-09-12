@@ -1,3 +1,7 @@
 /vendor/
 .idea/
 composer.lock
+.phpunit.result.cache
+testDB.db
+console.php
+docker-compose.yml
