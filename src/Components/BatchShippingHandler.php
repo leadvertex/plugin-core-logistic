@@ -14,6 +14,7 @@ use GuzzleHttp\Psr7\Response;
 use Leadvertex\Plugin\Components\Access\Registration\Registration;
 use Leadvertex\Plugin\Components\Batch\Batch;
 use Leadvertex\Plugin\Components\Batch\BatchHandlerInterface;
+use Leadvertex\Plugin\Components\Db\Helpers\UuidHelper;
 use Leadvertex\Plugin\Components\Guzzle\Guzzle;
 use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
@@ -22,8 +23,17 @@ use XAKEPEHOK\Path\Path;
 abstract class BatchShippingHandler implements BatchHandlerInterface
 {
 
+    protected string $lockId;
+
+    public function __construct()
+    {
+        $this->lockId = UuidHelper::getUuid();
+    }
+
     protected function createShipping(Batch $batch): int
     {
+        $batch->getApiClient()::$lockId = $this->lockId;
+
         $token = $batch->getToken()->getInputToken();
         $uri = (new Path($token->getClaim('iss')))
             ->down('companies')
@@ -55,6 +65,7 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
 
     protected function lockOrder(int $timeout, int $orderId, Batch $batch): bool
     {
+        $batch->getApiClient()::$lockId = $this->lockId;
         $client = $batch->getApiClient();
 
         $query = '
@@ -82,6 +93,7 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
      */
     protected function addOrders(Batch $batch, string $shippingId, array $orders): ResponseInterface
     {
+        $batch->getApiClient()::$lockId = $this->lockId;
         $inputToken = $batch->getToken()->getInputToken();
         $uri = (new Path($inputToken->getClaim('iss')))
             ->down('companies')
@@ -96,6 +108,7 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
             [
                 'shippingId' => $shippingId,
                 'orders' => $orders,
+                'lockId' => $this->lockId,
             ],
             60 * 10
         );
@@ -110,6 +123,7 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
      */
     protected function markAsExported(Batch $batch, string $shippingId, int $ordersCount): ResponseInterface
     {
+        $batch->getApiClient()::$lockId = $this->lockId;
         $inputToken = $batch->getToken()->getInputToken();
         $uri = (new Path($inputToken->getClaim('iss')))
             ->down('companies')
@@ -124,6 +138,7 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
             [
                 'shippingId' => $shippingId,
                 'orders' => $ordersCount,
+                'lockId' => $this->lockId,
             ],
             60 * 10
         );
@@ -137,6 +152,7 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
      */
     protected function markAsFailed(Batch $batch, string $shippingId): ResponseInterface
     {
+        $batch->getApiClient()::$lockId = $this->lockId;
         $inputToken = $batch->getToken()->getInputToken();
         $uri = (new Path($inputToken->getClaim('iss')))
             ->down('companies')
@@ -150,6 +166,7 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
             $uri,
             [
                 'shippingId' => $shippingId,
+                'lockId' => $this->lockId,
             ],
             60 * 10
         );
