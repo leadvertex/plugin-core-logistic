@@ -46,7 +46,9 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
                 'headers' => [
                     'X-PLUGIN-TOKEN' => (string) $batch->getToken()->getOutputToken(),
                 ],
-                'json' => [],
+                'json' => [
+                    'lockId' => $this->lockId,
+                ],
             ],
         );
 
