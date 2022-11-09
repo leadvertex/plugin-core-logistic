@@ -3,7 +3,7 @@
 namespace Leadvertex\Plugin\Core\Logistic\Components\Actions\Track;
 
 use Leadvertex\Plugin\Components\Db\Exceptions\DatabaseException;
-use Leadvertex\Plugin\Core\Logistic\Components\Actions\ActionInterface;
+use Leadvertex\Plugin\Core\Actions\ActionInterface;
 use Leadvertex\Plugin\Core\Logistic\Components\Track\Track;
 use Leadvertex\Plugin\Core\Logistic\Services\LogisticStatusesResolverService;
 use ReflectionException;

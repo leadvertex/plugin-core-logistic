@@ -430,9 +430,9 @@ class Track extends Model
 
     public static function afterTableCreate(Medoo $db): void
     {
-        $db->exec('CREATE INDEX `toUpdate` on ' . self::tableName() . ' (`createdAt`, `nextTrackingAt`, `stoppedAt`, `segment`)');
-        $db->exec('CREATE INDEX `lastTrackedAt` on ' . self::tableName() . ' (`lastTrackedAt`)');
-        $db->exec('CREATE INDEX `track` on ' . self::tableName() . ' (`pluginId`, `track`)');
+        $db->exec('CREATE INDEX `' . self::tableName() . '_toUpdate` on ' . self::tableName() . ' (`createdAt`, `nextTrackingAt`, `stoppedAt`, `segment`)');
+        $db->exec('CREATE INDEX `' . self::tableName() . '_lastTrackedAt` on ' . self::tableName() . ' (`lastTrackedAt`)');
+        $db->exec('CREATE INDEX `' . self::tableName() . '_track` on ' . self::tableName() . ' (`pluginId`, `track`)');
         DatabaseException::guard($db);
     }
 
