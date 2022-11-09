@@ -18,6 +18,7 @@ use Leadvertex\Plugin\Components\SpecialRequestDispatcher\Models\SpecialRequestT
 use Leadvertex\Plugin\Core\Logistic\Components\Track\Exception\TrackException;
 use Leadvertex\Plugin\Core\Logistic\Services\LogisticStatusesResolverService;
 use Medoo\Medoo;
+use ReflectionException;
 use XAKEPEHOK\EnumHelper\Exception\OutOfEnumException;
 use XAKEPEHOK\Path\Path;
 
@@ -349,6 +350,24 @@ class Track extends Model
         return self::findByCondition($where);
     }
 
+    /**
+     * @param string $track
+     * @return array
+     * @throws DatabaseException
+     * @throws ReflectionException
+     */
+    public static function findByTrack(string $track): array
+    {
+        $where = [
+            'AND' => [
+                'pluginId' => Connector::getReference()->getId(),
+                'track' => $track,
+            ]
+        ];
+
+        return self::findByCondition($where);
+    }
+
     protected static function beforeWrite(array $data): array
     {
         $data = parent::beforeWrite($data);
@@ -411,8 +430,9 @@ class Track extends Model
 
     public static function afterTableCreate(Medoo $db): void
     {
-        $db->exec('CREATE INDEX `toUpdate` on ' . self::tableName() . ' (`createdAt`, `nextTrackingAt`, `stoppedAt`, `segment`)');
-        $db->exec('CREATE INDEX `lastTrackedAt` on ' . self::tableName() . ' (`lastTrackedAt`)');
+        $db->exec('CREATE INDEX `' . self::tableName() . '_toUpdate` on ' . self::tableName() . ' (`createdAt`, `nextTrackingAt`, `stoppedAt`, `segment`)');
+        $db->exec('CREATE INDEX `' . self::tableName() . '_lastTrackedAt` on ' . self::tableName() . ' (`lastTrackedAt`)');
+        $db->exec('CREATE INDEX `' . self::tableName() . '_track` on ' . self::tableName() . ' (`pluginId`, `track`)');
         DatabaseException::guard($db);
     }
 
