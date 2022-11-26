@@ -16,6 +16,7 @@ use Leadvertex\Plugin\Components\Batch\Batch;
 use Leadvertex\Plugin\Components\Batch\BatchHandlerInterface;
 use Leadvertex\Plugin\Components\Db\Helpers\UuidHelper;
 use Leadvertex\Plugin\Components\Guzzle\Guzzle;
+use Leadvertex\Plugin\Components\Logistic\Components\ShippingAttachment;
 use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use XAKEPEHOK\Path\Path;
@@ -41,10 +42,10 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
             ->down('CRM/plugin/logistic/shipping');
 
         $response = Guzzle::getInstance()->post(
-            (string) $uri,
+            (string)$uri,
             [
                 'headers' => [
-                    'X-PLUGIN-TOKEN' => (string) $batch->getToken()->getOutputToken(),
+                    'X-PLUGIN-TOKEN' => (string)$batch->getToken()->getOutputToken(),
                 ],
                 'json' => [
                     'lockId' => $this->lockId,
@@ -169,6 +170,36 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
             [
                 'shippingId' => $shippingId,
                 'lockId' => $this->lockId,
+            ],
+            60 * 10
+        );
+    }
+
+    /**
+     * @param Batch $batch
+     * @param string $shippingId
+     * @param ShippingAttachment ...$shippingAttachment
+     * @return ResponseInterface
+     * @throws GuzzleException
+     */
+    protected function addShippingAttachments(Batch $batch, string $shippingId, ShippingAttachment ...$shippingAttachment): ResponseInterface
+    {
+        $batch->getApiClient()::$lockId = $this->lockId;
+        $inputToken = $batch->getToken()->getInputToken();
+        $uri = (new Path($inputToken->getClaim('iss')))
+            ->down('companies')
+            ->down($inputToken->getClaim('cid'))
+            ->down('CRM/plugin/logistic/shipping')
+            ->down($shippingId)
+            ->down('attachments/add');
+
+        return Registration::find()->makeSpecialRequest(
+            'PATCH',
+            $uri,
+            [
+                'shippingId' => $shippingId,
+                'lockId' => $this->lockId,
+                'attachments' => $shippingAttachment,
             ],
             60 * 10
         );
