@@ -194,7 +194,7 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
             ->down('attachments/add');
 
         return Registration::find()->makeSpecialRequest(
-            'POST',
+            'PATCH',
             $uri,
             [
                 'shippingId' => $shippingId,
