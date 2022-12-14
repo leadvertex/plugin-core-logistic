@@ -277,7 +277,7 @@ class Track extends Model
             'PATCH',
             $uri,
             $body,
-            24 * 60 * 60,
+            time() + 24 * 60 * 60,
             202,
         );
         $task = new SpecialRequestTask($request);
