@@ -256,7 +256,7 @@ class Track extends Model
         $uri = (new Path($registration->getClusterUri()))
             ->down('companies')
             ->down(Connector::getReference()->getCompanyId())
-            ->down('CRM/plugin/logistic/shipping/status');
+            ->down('CRM/plugin/logistic/status');
 
         $this->setNotified($lastStatus);
 
@@ -269,14 +269,10 @@ class Track extends Model
             'data' => null,
         ], 24 * 60 * 60);
 
-        $body = json_encode([
-            'request' => $jwt,
-        ]);
-
         $request = new SpecialRequest(
             'PATCH',
             $uri,
-            $body,
+            (string)$jwt,
             time() + 24 * 60 * 60,
             202,
         );
