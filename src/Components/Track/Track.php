@@ -7,6 +7,7 @@ use Leadvertex\Plugin\Components\Access\Registration\Registration;
 use Leadvertex\Plugin\Components\Db\Components\Connector;
 use Leadvertex\Plugin\Components\Db\Components\PluginReference;
 use Leadvertex\Plugin\Components\Db\Exceptions\DatabaseException;
+use Leadvertex\Plugin\Components\Db\Helpers\UuidHelper;
 use Leadvertex\Plugin\Components\Db\Model;
 use Leadvertex\Plugin\Components\Logistic\Exceptions\LogisticOfficePhoneException;
 use Leadvertex\Plugin\Components\Logistic\Exceptions\LogisticStatusTooLongException;
@@ -267,6 +268,7 @@ class Track extends Model
             'status' => $lastStatus->jsonSerialize(),
             'info' => $this->getLogisticOffice() !== null ? $this->getLogisticOffice()->jsonSerialize() : null,
             'data' => null,
+            'lockId' => UuidHelper::getUuid(),
         ], 24 * 60 * 60);
 
         $request = new SpecialRequest(
