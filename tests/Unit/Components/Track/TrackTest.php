@@ -255,16 +255,21 @@ class TrackTest extends LogisticTestCase
                 [
                     new LogisticStatus(LogisticStatus::IN_TRANSIT, '', strtotime('2022-01-01')),
                     new LogisticStatus(LogisticStatus::RETURNED, '', strtotime('2022-01-02')),
+                    new LogisticStatus(LogisticStatus::RETURNING_TO_SENDER, 'r_in_transit', strtotime('2022-01-02')),
                 ],
                 [
-                    new LogisticStatus(LogisticStatus::IN_TRANSIT, 'r_in_transit', strtotime('2022-01-03')),
-                    new LogisticStatus(LogisticStatus::DELIVERED_TO_SENDER, 'DELIVERED_TO_SENDER', strtotime('2022-01-04')),
+                    new LogisticStatus(LogisticStatus::ON_DELIVERY, 'r_in_transit', strtotime('2022-01-02')),
+                    new LogisticStatus(LogisticStatus::ON_DELIVERY, 'r_in_transit', strtotime('2022-01-02')),
+                    new LogisticStatus(LogisticStatus::ON_DELIVERY, 'r_in_transit', strtotime('2022-01-02')),
+                    new LogisticStatus(LogisticStatus::ON_DELIVERY, 'r_in_transit', strtotime('2022-01-02')),
+                    new LogisticStatus(LogisticStatus::ON_DELIVERY, 'r_in_transit', strtotime('2022-01-02')),
+                    new LogisticStatus(LogisticStatus::ON_DELIVERY, 'r_in_transit', strtotime('2022-01-03')),
                 ],
                 [
                     new LogisticStatus(LogisticStatus::IN_TRANSIT, '', strtotime('2022-01-01')),
                     new LogisticStatus(LogisticStatus::RETURNED, '', strtotime('2022-01-02')),
+                    new LogisticStatus(LogisticStatus::RETURNING_TO_SENDER, 'r_in_transit', strtotime('2022-01-02')),
                     new LogisticStatus(LogisticStatus::RETURNING_TO_SENDER, 'r_in_transit', strtotime('2022-01-03')),
-                    new LogisticStatus(LogisticStatus::DELIVERED_TO_SENDER, 'DELIVERED_TO_SENDER', strtotime('2022-01-04')),
                 ],
             ],
         ];

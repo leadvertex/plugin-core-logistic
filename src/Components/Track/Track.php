@@ -222,7 +222,15 @@ class Track extends Model
             }
         }
 
-        return $current;
+        /**
+         * удаляем повторяющиеся статусы, у которых hash могут совпасть после простановки @see LogisticStatus::RETURNING_TO_SENDER
+         */
+        $result = [];
+        foreach ($current as $item) {
+            $result[$item->getHash()] = $item;
+        }
+
+        return array_values($result);
     }
 
     public function getNotificationsHashes(): array
