@@ -3,11 +3,9 @@
 namespace Leadvertex\Components\Track;
 
 use DateTimeImmutable;
-use Leadvertex\Components\Address\Address;
 use Leadvertex\Components\MoneyValue\MoneyValue;
 use Leadvertex\Plugin\Components\Db\Components\PluginReference;
 use Leadvertex\Plugin\Components\Logistic\Exceptions\LogisticStatusTooLongException;
-use Leadvertex\Plugin\Components\Logistic\LogisticOffice;
 use Leadvertex\Plugin\Components\Logistic\LogisticStatus;
 use Leadvertex\Plugin\Components\Logistic\Waybill\Waybill;
 use Leadvertex\Plugin\Core\Logistic\Components\Track\Exception\TrackException;
@@ -124,20 +122,6 @@ class TrackTest extends LogisticTestCase
         $this->track->setWaybill($expected);
 
         $this->assertEquals($expected, $this->track->getWaybill());
-    }
-
-    public function testGetSetLogisticOffice(): void
-    {
-        $this->assertNull($this->track->getLogisticOffice());
-
-        $expected = new LogisticOffice(
-            new Address('region', 'city', 'a1'),
-            ['7898877777'],
-            null,
-        );
-        $this->track->setLogisticOffice($expected);
-
-        $this->assertEquals($expected, $this->track->getLogisticOffice());
     }
 
     public function addStatusDataProvider(): array
@@ -306,7 +290,6 @@ class TrackTest extends LogisticTestCase
             'notifiedAt' => ['INT'],
             'stoppedAt' => ['INT', 'NULL', 'DEFAULT NULL'],
             'waybill' => ['TEXT'],
-            'logisticOffice' => ['TEXT'],
             'segment' => ['CHAR(1)'],
         ], Track::schema());
     }

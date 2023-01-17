@@ -54,8 +54,6 @@ class Track extends Model
 
     protected Waybill $waybill;
 
-    protected ?LogisticOffice $logisticOffice = null;
-
     public function __construct(PluginReference $pluginReference, Waybill $waybill, string $shippingId, string $orderId)
     {
         $this->companyId = $pluginReference->getCompanyId();
@@ -274,7 +272,6 @@ class Track extends Model
             'waybill' => $this->getWaybill()->jsonSerialize(),
             'statuses' => $service->sort(),
             'status' => $lastStatus->jsonSerialize(),
-            'info' => $this->getLogisticOffice() !== null ? $this->getLogisticOffice()->jsonSerialize() : null,
             'data' => null,
             'lockId' => UuidHelper::getUuid(),
         ], 24 * 60 * 60);
@@ -308,16 +305,6 @@ class Track extends Model
     public function setWaybill(Waybill $waybill): void
     {
         $this->waybill = $waybill;
-    }
-
-    public function getLogisticOffice(): ?LogisticOffice
-    {
-        return $this->logisticOffice;
-    }
-
-    public function setLogisticOffice(LogisticOffice $logisticOffice): void
-    {
-        $this->logisticOffice = $logisticOffice;
     }
 
     /**
@@ -381,7 +368,6 @@ class Track extends Model
         $data['statuses'] = json_encode($data['statuses']);
         $data['notificationsHashes'] = json_encode($data['notificationsHashes']);
         $data['waybill'] = json_encode($data['waybill']);
-        $data['logisticOffice'] = json_encode($data['logisticOffice']);
         return $data;
     }
 
@@ -397,14 +383,13 @@ class Track extends Model
         $data = parent::afterRead($data);
 
         $data['statuses'] = array_map(function (array $item) {
-            return new LogisticStatus($item['code'], $item['text'], $item['timestamp']);
+            $logisticOffice = $item['office'] !== null
+                ? LogisticOffice::createFromArray($item['office'])
+                : null;
+            return new LogisticStatus($item['code'], $item['text'], $item['timestamp'], $logisticOffice);
         }, json_decode($data['statuses'], true));
         $data['notificationsHashes'] = json_decode($data['notificationsHashes'], true);
         $data['waybill'] = Waybill::createFromArray(json_decode($data['waybill'], true));
-        $logisticOfficeData = json_decode($data['logisticOffice'], true);
-        $data['logisticOffice'] = $logisticOfficeData !== null
-            ? LogisticOffice::createFromArray(json_decode($data['logisticOffice'], true))
-            : null;
         return $data;
     }
 
@@ -429,7 +414,6 @@ class Track extends Model
             'notifiedAt' => ['INT'],
             'stoppedAt' => ['INT', 'NULL', 'DEFAULT NULL'],
             'waybill' => ['TEXT'],
-            'logisticOffice' => ['TEXT'],
             'segment' => ['CHAR(1)'],
         ];
     }
