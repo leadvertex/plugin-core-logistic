@@ -383,10 +383,7 @@ class Track extends Model
         $data = parent::afterRead($data);
 
         $data['statuses'] = array_map(function (array $item) {
-            $logisticOffice = $item['office'] !== null
-                ? LogisticOffice::createFromArray($item['office'])
-                : null;
-            return new LogisticStatus($item['code'], $item['text'], $item['timestamp'], $logisticOffice);
+            return new LogisticStatus($item['code'], $item['text'], $item['timestamp'], LogisticOffice::createFromArray($item['office']));
         }, json_decode($data['statuses'], true));
         $data['notificationsHashes'] = json_decode($data['notificationsHashes'], true);
         $data['waybill'] = Waybill::createFromArray(json_decode($data['waybill'], true));
