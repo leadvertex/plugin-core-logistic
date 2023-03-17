@@ -28,7 +28,7 @@ class WebAppFactory extends \Leadvertex\Plugin\Core\Factories\WebAppFactory
             );
 
         $this->app
-            ->get('/protected/track/statuses/{trackNumber:[a-z\d\-_]{6,25}}', TrackGetStatusesAction::class)
+            ->get('/protected/track/statuses/{trackNumber:[A-z\d\-_]{6,25}}', TrackGetStatusesAction::class)
             ->add($this->protected);
 
         return parent::build();
