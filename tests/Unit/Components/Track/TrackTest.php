@@ -285,7 +285,7 @@ class TrackTest extends LogisticTestCase
             'createdAt' => ['INT', 'NOT NULL'],
             'nextTrackingAt' => ['INT', 'NULL', 'DEFAULT NULL'],
             'lastTrackedAt' => ['INT', 'NULL', 'DEFAULT NULL'],
-            'statuses' => ['TEXT'],
+            'statuses' => ['MEDIUMTEXT'],
             'notificationsHashes' => ['TEXT'],
             'notifiedAt' => ['INT'],
             'stoppedAt' => ['INT', 'NULL', 'DEFAULT NULL'],
