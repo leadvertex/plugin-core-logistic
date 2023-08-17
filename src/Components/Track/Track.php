@@ -9,6 +9,7 @@ use Leadvertex\Plugin\Components\Db\Components\PluginReference;
 use Leadvertex\Plugin\Components\Db\Exceptions\DatabaseException;
 use Leadvertex\Plugin\Components\Db\Helpers\UuidHelper;
 use Leadvertex\Plugin\Components\Db\Model;
+use Leadvertex\Plugin\Components\Db\PluginModelInterface;
 use Leadvertex\Plugin\Components\Logistic\Exceptions\LogisticOfficePhoneException;
 use Leadvertex\Plugin\Components\Logistic\Exceptions\LogisticStatusTooLongException;
 use Leadvertex\Plugin\Components\Logistic\LogisticOffice;
@@ -23,7 +24,7 @@ use ReflectionException;
 use XAKEPEHOK\EnumHelper\Exception\OutOfEnumException;
 use XAKEPEHOK\Path\Path;
 
-class Track extends Model
+class Track extends Model implements PluginModelInterface
 {
     protected string $companyId;
 
