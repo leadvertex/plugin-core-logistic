@@ -31,7 +31,7 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
         $this->lockId = UuidHelper::getUuid();
     }
 
-    protected function createShipping(Batch $batch): int
+    protected function createShipping(Batch $batch, $removeOnCancelFields = []): int
     {
         $batch->getApiClient()::$lockId = $this->lockId;
 
@@ -49,6 +49,7 @@ abstract class BatchShippingHandler implements BatchHandlerInterface
                 ],
                 'json' => [
                     'lockId' => $this->lockId,
+                    'removeOnCancelFields' => $removeOnCancelFields,
                 ],
             ],
         );

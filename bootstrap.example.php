@@ -16,6 +16,7 @@ use Leadvertex\Plugin\Components\Settings\Settings;
 use Leadvertex\Plugin\Components\Translations\Translator;
 use Leadvertex\Plugin\Core\Actions\Upload\LocalUploadAction;
 use Leadvertex\Plugin\Core\Actions\Upload\UploadersContainer;
+use Leadvertex\Plugin\Core\Logistic\Components\Actions\Shipping\ShippingContainer;
 use Leadvertex\Plugin\Core\Logistic\Components\BatchShippingHandler;
 use Leadvertex\Plugin\Core\Logistic\Components\Waybill\WaybillContainer;
 use Leadvertex\Plugin\Core\Logistic\Components\Waybill\WaybillHandlerInterface;
@@ -79,4 +80,9 @@ BatchContainer::config(
 WaybillContainer::config(
     fn() => new WaybillForm(),
     new WaybillHandlerInterface()
+);
+
+# 9. Configure shipping cancel action (optional)
+ShippingContainer::config(
+    new ShippingCancelAction(),
 );
