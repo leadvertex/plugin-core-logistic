@@ -336,12 +336,51 @@ class Track extends Model implements PluginModelInterface
         ];
 
         if (!empty($segments)) {
-            $where['AND'][] = ['segment' => $segments];
+            $where['AND']['segment'] = $segments;
         }
         $where['LIMIT'] = $limit;
         $where['ORDER'] = 'lastTrackedAt';
 
         return self::findByCondition($where);
+    }
+
+
+    /**
+     * WARNING! You should call this method only if you exactly know what do you do
+     * @param string $segments allowed md5 chars separated by comma
+     * @param int $limit
+     * @return array
+     * @throws Exception
+     * @internal
+     */
+    public static function findForTrackingWithoutScope(string $segments = '', int $limit = 3000): array
+    {
+        if (!empty($segments)) {
+            $segments = explode(',', $segments);
+        }
+
+        $where = [
+            'AND' => [
+                'createdAt[>=]' => time() - 24 * 60 * 60 * 30 * 5,
+                'stoppedAt' => null,
+                'OR #nextTrackingAt' => [
+                    'nextTrackingAt' => null,
+                    'nextTrackingAt[<=]' => time(),
+                ],
+                'OR #lastTrackedAt' => [
+                    'lastTrackedAt' => null,
+                    'lastTrackedAt[<=]' => time() - 60 * 60,
+                ],
+            ],
+        ];
+
+        if (!empty($segments)) {
+            $where['AND']['segment'] = $segments;
+        }
+        $where['LIMIT'] = $limit;
+        $where['ORDER'] = 'lastTrackedAt';
+
+        return self::findByConditionWithoutScope($where);
     }
 
     /**
