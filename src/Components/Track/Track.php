@@ -317,7 +317,7 @@ class Track extends Model implements PluginModelInterface
     public static function findForTracking(string $segments = '', int $limit = 3000): array
     {
         if (!empty($segments)) {
-            $segments = explode(',', $segments);
+            $segments = self::filterSegments($segments);
         }
 
         $where = [
@@ -356,7 +356,7 @@ class Track extends Model implements PluginModelInterface
     public static function findForTrackingWithoutScope(string $segments = '', int $limit = 3000): array
     {
         if (!empty($segments)) {
-            $segments = explode(',', $segments);
+            $segments = self::filterSegments($segments);
         }
 
         $where = [
@@ -428,6 +428,14 @@ class Track extends Model implements PluginModelInterface
         $data['notificationsHashes'] = json_decode($data['notificationsHashes'], true);
         $data['waybill'] = Waybill::createFromArray(json_decode($data['waybill'], true));
         return $data;
+    }
+
+    protected static function filterSegments(string $segments): array
+    {
+        $segments = explode(',', $segments);
+        return array_filter($segments, function ($value) {
+            return preg_match('/^[a-fA-F0-9]$/', $value);
+        });
     }
 
     public static function tableName(): string
