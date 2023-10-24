@@ -27,7 +27,7 @@ use XAKEPEHOK\Path\Path;
 class Track extends Model implements PluginModelInterface
 {
 
-    const MONTHS_5 = 24 * 60 * 60 * 30 * 5;
+    const MAX_TRACKING_TIME = 24 * 60 * 60 * 30 * 5;
     protected string $companyId;
 
     protected string $pluginAlias;
@@ -418,7 +418,7 @@ class Track extends Model implements PluginModelInterface
     {
         return [
             'AND' => [
-                'createdAt[>=]' => time() - self::MONTHS_5,
+                'createdAt[>=]' => time() - self::MAX_TRACKING_TIME,
                 'stoppedAt' => null,
                 'OR #nextTrackingAt' => [
                     'nextTrackingAt' => null,
