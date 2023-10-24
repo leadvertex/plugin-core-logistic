@@ -26,6 +26,8 @@ use XAKEPEHOK\Path\Path;
 
 class Track extends Model implements PluginModelInterface
 {
+
+    const MAX_TRACKING_TIME = 24 * 60 * 60 * 30 * 5;
     protected string $companyId;
 
     protected string $pluginAlias;
@@ -317,31 +319,44 @@ class Track extends Model implements PluginModelInterface
     public static function findForTracking(string $segments = '', int $limit = 3000): array
     {
         if (!empty($segments)) {
-            $segments = explode(',', $segments);
+            $segments = self::filterSegments($segments);
         }
 
-        $where = [
-            'AND' => [
-                'createdAt[>=]' => time() - 24 * 60 * 60 * 30 * 5,
-                'stoppedAt' => null,
-                'OR #nextTrackingAt' => [
-                    'nextTrackingAt' => null,
-                    'nextTrackingAt[<=]' => time(),
-                ],
-                'OR #lastTrackedAt' => [
-                    'lastTrackedAt' => null,
-                    'lastTrackedAt[<=]' => time() - 60 * 60,
-                ],
-            ],
-        ];
+        $where = self::getTrackingWhereStatement();
 
         if (!empty($segments)) {
-            $where['AND'][] = ['segment' => $segments];
+            $where['AND']['segment'] = $segments;
         }
         $where['LIMIT'] = $limit;
         $where['ORDER'] = 'lastTrackedAt';
 
         return self::findByCondition($where);
+    }
+
+
+    /**
+     * WARNING! You should call this method only if you exactly know what do you do
+     * @param string $segments allowed md5 chars separated by comma
+     * @param int $limit
+     * @return array
+     * @throws Exception
+     * @internal
+     */
+    public static function findForTrackingWithoutScope(string $segments = '', int $limit = 3000): array
+    {
+        if (!empty($segments)) {
+            $segments = self::filterSegments($segments);
+        }
+
+        $where = self::getTrackingWhereStatement();
+
+        if (!empty($segments)) {
+            $where['AND']['segment'] = $segments;
+        }
+        $where['LIMIT'] = $limit;
+        $where['ORDER'] = 'lastTrackedAt';
+
+        return self::findByConditionWithoutScope($where);
     }
 
     /**
@@ -389,6 +404,32 @@ class Track extends Model implements PluginModelInterface
         $data['notificationsHashes'] = json_decode($data['notificationsHashes'], true);
         $data['waybill'] = Waybill::createFromArray(json_decode($data['waybill'], true));
         return $data;
+    }
+
+    private static function filterSegments(string $segments): array
+    {
+        $segments = explode(',', $segments);
+        return array_filter($segments, function ($value) {
+            return preg_match('/^[a-fA-F0-9]$/', $value);
+        });
+    }
+
+    private static function getTrackingWhereStatement(): array
+    {
+        return [
+            'AND' => [
+                'createdAt[>=]' => time() - self::MAX_TRACKING_TIME,
+                'stoppedAt' => null,
+                'OR #nextTrackingAt' => [
+                    'nextTrackingAt' => null,
+                    'nextTrackingAt[<=]' => time(),
+                ],
+                'OR #lastTrackedAt' => [
+                    'lastTrackedAt' => null,
+                    'lastTrackedAt[<=]' => time() - 60 * 60,
+                ],
+            ],
+        ];
     }
 
     public static function tableName(): string
